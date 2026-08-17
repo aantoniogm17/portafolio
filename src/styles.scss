@@ -1,0 +1,300 @@
+/* ============================================================================
+   Tokens de diseño
+   Todo el color, el espaciado y la tipografía salen de aquí. Ningún componente
+   escribe un hex a mano: si quieres cambiar el acento del sitio, se cambia en
+   una línea y el cambio recorre todo el sitio.
+   ========================================================================== */
+
+:root {
+  /* Fondos: azul-carbón, no negro. El negro puro aplasta las sombras. */
+  --bg: #0b0f1a;
+  --bg-elev: #121829;
+  --bg-elev-2: #182034;
+  --line: rgba(233, 236, 244, 0.09);
+  --line-strong: rgba(233, 236, 244, 0.18);
+
+  --text: #e9ecf4;
+  --text-dim: #8c96ad;
+
+  /* Turquesa y violeta se mezclan en los degradados; el ámbar aparece poco,
+     para que cuando aparezca signifique algo. */
+  --cyan: #3dd6c4;
+  --violet: #8b6df0;
+  --amber: #f2a44c;
+  --grad: linear-gradient(120deg, var(--cyan), var(--violet));
+
+  --font-display: 'Sora', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
+
+  --gap: clamp(1rem, 2vw, 1.5rem);
+  --section-y: clamp(5rem, 11vh, 8.5rem);
+  --radius: 14px;
+  --max: 1140px;
+
+  color-scheme: dark;
+}
+
+/* ============================================================================
+   Base
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 92px;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+
+  /* Dos halos muy tenues detrás de todo: rompen el plano del fondo sin
+     competir con el contenido. */
+  background-image:
+    radial-gradient(60rem 40rem at 78% -8%, rgba(139, 109, 240, 0.16), transparent 62%),
+    radial-gradient(52rem 34rem at 4% 12%, rgba(61, 214, 196, 0.11), transparent 60%);
+  background-attachment: fixed;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin: 0;
+  text-wrap: balance;
+}
+
+p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+::selection {
+  background: rgba(61, 214, 196, 0.28);
+}
+
+/* El foco por teclado tiene que verse. Es la diferencia entre un sitio que se
+   puede usar sin ratón y uno que no. */
+:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ============================================================================
+   Estructura
+   ========================================================================== */
+
+.container {
+  width: min(100% - 2.5rem, var(--max));
+  margin-inline: auto;
+}
+
+.section {
+  padding-block: var(--section-y);
+  position: relative;
+}
+
+.section + .section {
+  border-top: 1px solid var(--line);
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.9rem;
+}
+
+.eyebrow::before {
+  content: '';
+  width: 26px;
+  height: 1px;
+  background: var(--grad);
+}
+
+.section-title {
+  font-size: clamp(1.9rem, 4.2vw, 2.9rem);
+  margin-bottom: 2.5rem;
+}
+
+.gradient-text {
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ============================================================================
+   Piezas reutilizables
+   ========================================================================== */
+
+.card {
+  background: linear-gradient(180deg, var(--bg-elev), rgba(18, 24, 41, 0.55));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: clamp(1.25rem, 3vw, 1.9rem);
+  transition:
+    border-color 0.35s ease,
+    transform 0.35s ease;
+}
+
+.card:hover {
+  border-color: var(--line-strong);
+  transform: translateY(-3px);
+}
+
+.chip {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  padding: 0.28rem 0.65rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  transition:
+    color 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.chip:hover {
+  color: var(--text);
+  border-color: var(--cyan);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.72rem 1.35rem;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-weight: 500;
+  font-size: 0.94rem;
+  cursor: pointer;
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease,
+    background 0.25s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+.btn--primary {
+  background: var(--grad);
+  border-color: transparent;
+  color: #08111b;
+  font-weight: 600;
+}
+
+.btn--ghost:hover {
+  border-color: var(--cyan);
+  background: rgba(61, 214, 196, 0.07);
+}
+
+/* ============================================================================
+   Animación
+   ========================================================================== */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.reveal.is-revealed {
+  opacity: 1;
+  transform: none;
+}
+
+/* Regla no negociable: si el sistema pide menos movimiento, no hay movimiento.
+   Las animaciones pueden provocar mareo y migraña a personas con trastornos
+   vestibulares; no es solo una preferencia estética. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ============================================================================
+   Accesibilidad
+   ========================================================================== */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -4rem;
+  z-index: 100;
+  padding: 0.7rem 1.1rem;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--cyan);
+  border-radius: 8px;
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+  top: 1rem;
+}

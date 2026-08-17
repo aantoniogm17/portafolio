@@ -1,0 +1,59 @@
+# Publica el sitio en GitHub Pages en cada push a main.
+# No necesitas correr nada en tu máquina: GitHub compila y publica solo.
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # permite lanzarlo a mano desde la pestaña Actions
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Si haces varios push seguidos, cancela el despliegue anterior en curso.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # IMPORTANTE: el base-href debe ser el nombre de tu repositorio entre
+      # barras. Si tu repo se llama "portafolio", queda /portafolio/.
+      # Si publicas en TU-USUARIO.github.io (repo especial), cámbialo a /.
+      - run: npx ng build --configuration=production --base-href=/portafolio/
+
+      # GitHub Pages usa Jekyll por defecto e ignora carpetas que empiezan con
+      # guion bajo. Angular no genera ninguna, pero .nojekyll lo evita del todo.
+      - run: touch dist/portafolio/browser/.nojekyll
+
+      # Una SPA no tiene páginas reales por ruta; si alguien recarga en una URL
+      # profunda, Pages devuelve 404. Copiar index.html como 404.html hace que
+      # Angular tome el control y muestre la página correcta.
+      - run: cp dist/portafolio/browser/index.html dist/portafolio/browser/404.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/portafolio/browser
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
