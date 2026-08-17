@@ -1,6 +1,6 @@
-# Portafolio — Antonio García Morán
+# Portafolio
 
-Sitio personal de una sola página, construido con Angular 20. Bilingüe
+Sitio personal de una sola página, bilingüe
 (español / inglés), tema oscuro, con un grafo de tecnologías interactivo
 dibujado en canvas.
 
