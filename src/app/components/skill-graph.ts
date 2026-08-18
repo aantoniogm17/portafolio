@@ -16,10 +16,56 @@ interface Node {
   vx: number;
   vy: number;
   r: number;
+  color: string;
+  icon?: IconSpec;
 }
 
-/** Colores por grupo. El índice 3 es el nodo central. */
-const PALETTE = ['#3DD6C4', '#8B6DF0', '#F2A44C', '#E9ECF4'];
+interface IconSpec {
+  url: string;
+  /** Color de marca del icono, usado en el anillo del nodo y en las aristas que lo tocan. */
+  color: string;
+  /** Los logos de fondo negro (p. ej. GitHub) son invisibles sobre el relleno oscuro del nodo. */
+  invert?: boolean;
+  /**
+   * 'contain' (por defecto) respeta el logo transparente tal cual.
+   * 'cover' se usa para iconos que ya traen su propio fondo cuadrado (p. ej. AWS),
+   * así el fondo del icono llena el nodo sin dejar un borde visible.
+   */
+  fit?: 'contain' | 'cover';
+}
+
+/** Color del nodo central (mis iniciales). Cada tecnología usa el color de marca de su icono. */
+const CENTER_COLOR = '#E9ECF4';
+
+function devicon(slug: string, variant = 'original'): string {
+  return `https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/${slug}/${slug}-${variant}.svg`;
+}
+
+/** Iconos tomados de devicon.dev, con su color de marca oficial. */
+const ICONS: Record<string, IconSpec> = {
+  Angular: { url: devicon('angularjs'), color: '#c4473a' },
+  'C#': { url: devicon('csharp'), color: '#68217a' },
+  JavaScript: { url: devicon('javascript'), color: '#f0db4f' },
+  Ionic: { url: devicon('ionic'), color: '#4e8ef7' },
+  Java: { url: devicon('java'), color: '#EA2D2E' },
+  Python: { url: devicon('python'), color: '#ffd845' },
+  'ASP.NET': { url: devicon('dot-net'), color: '#1384c8' },
+  HTML: { url: devicon('html5'), color: '#e54d26' },
+  CSS: { url: devicon('css3'), color: '#3d8fc6' },
+  'SQL Server': { url: devicon('microsoftsqlserver'), color: '#ee352c' },
+  Oracle: { url: devicon('oracle'), color: '#EA1B22' },
+  // Devicon solo ofrece el wordmark de AWS (sin marca suelta); el tile de
+  // skill-icons trae el logo compacto pensado para insignias cuadradas.
+  AWS: { url: 'https://cdn.jsdelivr.net/gh/tandpfun/skill-icons/icons/AWS-Dark.svg', color: '#f90', fit: 'cover' },
+  Firebase: { url: devicon('firebase'), color: '#ffa000' },
+  Git: { url: devicon('git'), color: '#f34f29' },
+  // El octocat de devicon es negro sólido; se invierte a blanco para que se
+  // vea sobre el relleno oscuro del nodo (igual que el propio modo oscuro de GitHub).
+  GitHub: { url: devicon('github'), color: '#E9ECF4', invert: true },
+  'VS Code': { url: devicon('vscode'), color: '#3C99D4' },
+  'Visual Studio': { url: devicon('visualstudio'), color: '#52218a' },
+  'Android Studio': { url: devicon('androidstudio'), color: '#4285F4' },
+};
 
 /**
  * Grafo de fuerzas dibujado en canvas.
@@ -44,7 +90,9 @@ const PALETTE = ['#3DD6C4', '#8B6DF0', '#F2A44C', '#E9ECF4'];
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <canvas #canvas class="graph" aria-hidden="true"></canvas>
-    <p class="sr-only">{{ description() }}</p>
+    @if (description()) {
+      <p class="sr-only">{{ description() }}</p>
+    }
   `,
   styles: `
     :host {
@@ -62,7 +110,7 @@ const PALETTE = ['#3DD6C4', '#8B6DF0', '#F2A44C', '#E9ECF4'];
   `,
 })
 export class SkillGraph implements OnDestroy {
-  readonly description = input.required<string>();
+  readonly description = input<string>('');
   private readonly canvasRef = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
 
   private nodes: Node[] = [];
@@ -75,6 +123,7 @@ export class SkillGraph implements OnDestroy {
   private observer?: IntersectionObserver;
   private resizeObserver?: ResizeObserver;
   private reduced = false;
+  private readonly images = new Map<string, HTMLImageElement>();
 
   constructor() {
     afterNextRender(() => this.setup());
@@ -125,7 +174,9 @@ export class SkillGraph implements OnDestroy {
       { group: 2, items: ['Git', 'GitHub', 'VS Code', 'Visual Studio', 'Android Studio'] },
     ];
 
-    this.nodes = [{ label: 'AGM', group: 3, x: 0, y: 0, vx: 0, vy: 0, r: 26 }];
+    this.nodes = [
+      { label: 'AGM', group: 3, x: 0, y: 0, vx: 0, vy: 0, r: 26, color: CENTER_COLOR },
+    ];
     this.edges = [];
 
     for (const { items, group } of groups) {
@@ -133,6 +184,7 @@ export class SkillGraph implements OnDestroy {
       items.forEach((label, i) => {
         const angle = Math.random() * Math.PI * 2;
         const radius = 80 + Math.random() * 120;
+        const icon = ICONS[label];
         this.nodes.push({
           label,
           group,
@@ -141,7 +193,10 @@ export class SkillGraph implements OnDestroy {
           vx: 0,
           vy: 0,
           r: i === 0 ? 18 : 13,
+          color: icon?.color ?? CENTER_COLOR,
+          icon,
         });
+        if (icon) this.preload(icon.url);
         // El primer elemento de cada grupo cuelga del centro; el resto, de él.
         this.edges.push(i === 0 ? [0, anchorIndex] : [anchorIndex, anchorIndex + i]);
       });
@@ -151,6 +206,16 @@ export class SkillGraph implements OnDestroy {
         this.edges.push([anchorIndex + 2, anchorIndex + 3]);
       }
     }
+  }
+
+  private preload(url: string): void {
+    if (this.images.has(url)) return;
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.decoding = 'async';
+    img.onload = () => { if (!this.running) this.draw(); };
+    img.src = url;
+    this.images.set(url, img);
   }
 
   private resize(): void {
@@ -266,8 +331,8 @@ export class SkillGraph implements OnDestroy {
       const b = this.nodes[j];
       const active = this.hover === -1 || neighbours.has(i) || neighbours.has(j);
       const gradient = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
-      gradient.addColorStop(0, PALETTE[a.group]);
-      gradient.addColorStop(1, PALETTE[b.group]);
+      gradient.addColorStop(0, a.color);
+      gradient.addColorStop(1, b.color);
       ctx.globalAlpha = active ? 0.34 : 0.07;
       ctx.strokeStyle = gradient;
       ctx.beginPath();
@@ -281,7 +346,7 @@ export class SkillGraph implements OnDestroy {
     for (let i = 0; i < this.nodes.length; i++) {
       const node = this.nodes[i];
       const active = this.hover === -1 || neighbours.has(i);
-      const color = PALETTE[node.group];
+      const color = node.color;
 
       ctx.globalAlpha = active ? 1 : 0.18;
 
@@ -302,6 +367,8 @@ export class SkillGraph implements OnDestroy {
       ctx.lineWidth = i === this.hover ? 2 : 1.2;
       ctx.stroke();
 
+      this.drawIcon(ctx, node);
+
       ctx.fillStyle = node.group === 3 ? color : 'rgba(233, 236, 244, 0.92)';
       ctx.font = `${node.group === 3 ? 600 : 400} ${node.group === 3 ? 13 : 10}px "JetBrains Mono", ui-monospace, monospace`;
       ctx.fillText(node.label, node.x, node.y + node.r + 12);
@@ -309,6 +376,32 @@ export class SkillGraph implements OnDestroy {
 
     ctx.restore();
     ctx.globalAlpha = 1;
+  }
+
+  private drawIcon(ctx: CanvasRenderingContext2D, node: Node): void {
+    if (!node.icon) return;
+    const img = this.images.get(node.icon.url);
+    if (!img || !img.complete || img.naturalWidth === 0) return;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(node.x, node.y, node.r - 2, 0, Math.PI * 2);
+    ctx.clip();
+
+    if (node.icon.invert) ctx.filter = 'invert(1)';
+
+    const box = node.r * 1.5;
+    const ratio = img.naturalWidth / img.naturalHeight;
+    const cover = node.icon.fit === 'cover';
+    let w = box;
+    let h = box / ratio;
+    if (cover ? h < box : h > box) {
+      h = box;
+      w = box * ratio;
+    }
+    ctx.drawImage(img, node.x - w / 2, node.y - h / 2, w, h);
+
+    ctx.restore();
   }
 
   private neighboursOf(index: number): Set<number> {

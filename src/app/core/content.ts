@@ -23,6 +23,7 @@ export interface Project {
   readonly contributions: readonly string[];
   readonly stack: readonly string[];
   readonly note: string;
+  readonly url?: string;
 }
 
 export interface TechGroup {
@@ -49,8 +50,6 @@ export interface Content {
     readonly lead: string;
     readonly ctaPrimary: string;
     readonly ctaSecondary: string;
-    readonly graphHint: string;
-    readonly graphAlt: string;
   };
   readonly about: {
     readonly eyebrow: string;
@@ -82,14 +81,8 @@ export interface Content {
     readonly title: string;
     readonly lead: string;
     readonly emailLabel: string;
-    readonly locationLabel: string;
-    readonly location: string;
     readonly cvEs: string;
     readonly cvEn: string;
-  };
-  readonly footer: {
-    readonly built: string;
-    readonly year: string;
   };
 }
 
@@ -108,27 +101,22 @@ export const ES: Content = {
     toggleLabel: 'Cambiar a inglés',
   },
   hero: {
-    eyebrow: 'Desarrollador de software · Tampico, México',
+    eyebrow: 'Desarrollador de software',
     name: 'Antonio García Morán',
-    headline: 'Construyo el backend, la base de datos y la interfaz — y me aseguro de que las tres se entiendan.',
+    headline: 'Construyo el backend, la base de datos y la interfaz. Priorizando la calidad, integridad y seguridad',
     lead:
-      'Ingeniero en Sistemas Computacionales y estudiante de maestría en Ciencias de la Computación. ' +
-      'Trabajé el ciclo completo de una aplicación de delivery: arquitectura, modelo de datos, módulos en C# y Angular, ' +
-      'y las pruebas funcionales antes de cada entrega.',
+      'Ingeniero en Sistemas Computacionales y estudiante de Maestría en Ciencias de la Computación. ' +
+      'Cuento con la capacidad de diseñar la arquitectura, establecer un modelo de datos, crear módulos de trabajo ' +
+      'y realizar las pruebas funcionales antes de cada entrega.',
     ctaPrimary: 'Ver proyectos',
     ctaSecondary: 'Descargar CV',
-    graphHint: 'Pasa el cursor sobre un nodo',
-    graphAlt:
-      'Grafo interactivo que conecta las tecnologías que utilizo, agrupadas en desarrollo, datos y nube, y herramientas.',
   },
   about: {
     eyebrow: 'Quién',
     title: 'Sobre mí',
     paragraphs: [
-      'Empecé a programar en el CBTIS y no me he despegado desde entonces. Estudié Ingeniería en Sistemas Computacionales en el Instituto Tecnológico de Ciudad Madero y ahí mismo curso la maestría.',
-      'En SoftTam trabajé en una aplicación de delivery de comida. Participé en las decisiones de arquitectura y modelo de datos, desarrollé módulos web y móviles con Angular e Ionic sobre un backend en C#, diseñé la base en SQL Server e integré servicios de AWS y Firebase.',
-      'Antes de dedicarme al desarrollo estuve del otro lado del mostrador: soporte técnico en 3M Informática, sistemas internos en CFE y tres años supervisando un equipo en Starbucks. De ahí traigo algo que no se aprende en un curso — entender qué necesita quien va a usar el software, y sostener la calma cuando algo se rompe a media operación.',
-      'Busco integrarme a un equipo de desarrollo, en remoto o en la zona de Tampico, Madero y Altamira.',
+      'Lo que más me gusta de programar no es escribir código, es resolver problemas: entender qué necesita alguien, pensar cómo debería funcionar el sistema, y no soltarlo hasta que quede bien hecho, no solo que corra, sino que aguante. Eso incluye meterme a un sistema que ya existe, entender por qué se comporta como se comporta, y corregirlo sin romper nada más.',
+      'Prefiero estar en la conversación desde que se decide la arquitectura, no solo ejecutando tareas ya definidas. Me gusta cuestionar el porqué de una decisión técnica antes de escribir la primera línea, y verificar que los datos digan lo que deberían decir antes de confiar en ellos.',
     ],
     nowTitle: 'Ahora mismo',
     now: [
@@ -163,16 +151,6 @@ export const ES: Content = {
         ],
       },
       {
-        company: 'Starbucks',
-        role: 'Supervisor',
-        period: 'Nov 2022 — Ene 2026',
-        bullets: [
-          'Lideré un equipo de trabajo y supervisé el cumplimiento de procedimientos operativos.',
-          'Generé reportes operativos y di seguimiento a métricas de desempeño de sucursal.',
-          'Resolví problemas y tomé decisiones bajo presión, en operación continua.',
-        ],
-      },
-      {
         company: '3M Informática',
         role: 'Técnico en Soporte',
         period: 'Ene 2017 — Ago 2018',
@@ -192,7 +170,7 @@ export const ES: Content = {
     stackLabel: 'Stack',
     items: [
       {
-        name: 'SoftTam',
+        name: 'SimonVa',
         tagline: 'Aplicación de delivery de comida — web y móvil',
         summary:
           'Plataforma de pedidos a domicilio con aplicación para el cliente, panel administrativo y backend propio. ' +
@@ -207,6 +185,7 @@ export const ES: Content = {
         ],
         stack: ['C#', 'Angular', 'Ionic', 'SQL Server', 'AWS', 'Firebase', 'Git'],
         note: 'Producto interno de SoftTam. El código no es público.',
+        url: 'https://simonva.com/home',
       },
     ],
   },
@@ -224,14 +203,8 @@ export const ES: Content = {
     title: 'Hablemos',
     lead: 'Si buscas a alguien para tu equipo de desarrollo, escríbeme. Respondo el mismo día.',
     emailLabel: 'Correo',
-    locationLabel: 'Ubicación',
-    location: 'Tampico, Tamaulipas, México',
     cvEs: 'CV en español',
     cvEn: 'CV en inglés',
-  },
-  footer: {
-    built: 'Hecho con Angular. Código en GitHub.',
-    year: '2026',
   },
 };
 
@@ -248,27 +221,22 @@ export const EN: Content = {
     toggleLabel: 'Switch to Spanish',
   },
   hero: {
-    eyebrow: 'Software developer · Tampico, Mexico',
+    eyebrow: 'Software developer',
     name: 'Antonio García Morán',
-    headline: 'I build the backend, the database and the interface — and make sure all three agree.',
+    headline: 'I build the backend, the database and the interface, prioritizing quality, integrity and security',
     lead:
-      'Computer Systems Engineer and M.Sc. in Computer Science candidate. ' +
-      'I worked across the full cycle of a food delivery application: architecture, data model, C# and Angular modules, ' +
-      'and the functional testing before each release.',
+      'Computer Systems Engineer and Master’s student in Computer Science. ' +
+      'I’m able to design the architecture, establish a data model, create work modules, ' +
+      'and run functional testing before each release.',
     ctaPrimary: 'See projects',
     ctaSecondary: 'Download CV',
-    graphHint: 'Hover a node',
-    graphAlt:
-      'Interactive graph connecting the technologies I work with, grouped into development, data and cloud, and tools.',
   },
   about: {
     eyebrow: 'Who',
     title: 'About me',
     paragraphs: [
-      'I started programming in high school and never stopped. I studied Computer Systems Engineering at Instituto Tecnológico de Ciudad Madero, where I am now doing my master\u2019s degree.',
-      'At SoftTam I worked on a food delivery application. I took part in architecture and data model decisions, built web and mobile modules with Angular and Ionic on a C# backend, designed the SQL Server database and integrated AWS and Firebase.',
-      'Before moving into development I was on the other side of the counter: technical support at 3M Informática, internal systems at CFE, and three years supervising a team at Starbucks. That taught me something a course cannot — how to understand what the person using the software actually needs, and how to stay calm when something breaks mid-operation.',
-      'I am looking to join a development team, either remotely or in the Tampico area.',
+      'What I like most about programming isn’t writing code, it’s solving problems: understanding what someone needs, thinking through how the system should work, and not letting go until it’s properly done, not just that it runs, but that it holds up. That includes digging into a system that already exists, understanding why it behaves the way it does, and fixing it without breaking anything else.',
+      'I prefer being part of the conversation from the moment the architecture gets decided, not just executing tasks that are already defined. I like questioning the reasoning behind a technical decision before writing the first line, and verifying that the data says what it should before trusting it.',
     ],
     nowTitle: 'Right now',
     now: [
@@ -303,16 +271,6 @@ export const EN: Content = {
         ],
       },
       {
-        company: 'Starbucks',
-        role: 'Shift Supervisor',
-        period: 'Nov 2022 — Jan 2026',
-        bullets: [
-          'Led a work team and supervised compliance with operating procedures.',
-          'Produced operational reports and tracked store performance metrics.',
-          'Solved problems and made decisions under pressure, in continuous operation.',
-        ],
-      },
-      {
         company: '3M Informática',
         role: 'IT Support Technician',
         period: 'Jan 2017 — Aug 2018',
@@ -332,7 +290,7 @@ export const EN: Content = {
     stackLabel: 'Stack',
     items: [
       {
-        name: 'SoftTam',
+        name: 'SimonVa',
         tagline: 'Food delivery application — web and mobile',
         summary:
           'Food ordering platform with a customer app, an admin panel and its own backend. ' +
@@ -347,6 +305,7 @@ export const EN: Content = {
         ],
         stack: ['C#', 'Angular', 'Ionic', 'SQL Server', 'AWS', 'Firebase', 'Git'],
         note: 'Internal SoftTam product. The source code is not public.',
+        url: 'https://simonva.com/home',
       },
     ],
   },
@@ -364,14 +323,8 @@ export const EN: Content = {
     title: 'Let\u2019s talk',
     lead: 'If you are looking for someone to join your development team, write to me. I reply the same day.',
     emailLabel: 'Email',
-    locationLabel: 'Location',
-    location: 'Tampico, Tamaulipas, Mexico',
     cvEs: 'CV in Spanish',
     cvEn: 'CV in English',
-  },
-  footer: {
-    built: 'Built with Angular. Source on GitHub.',
-    year: '2026',
   },
 };
 
