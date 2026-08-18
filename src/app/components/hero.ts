@@ -23,8 +23,7 @@ import { SkillGraph } from './skill-graph';
         </div>
 
         <div class="hero__graph">
-          <app-skill-graph [description]="t().hero.graphAlt" />
-          <p class="hero__hint" aria-hidden="true">{{ t().hero.graphHint }}</p>
+          <app-skill-graph />
         </div>
       </div>
     </section>
@@ -91,17 +90,6 @@ import { SkillGraph } from './skill-graph';
     @keyframes fade {
       from { opacity: 0; }
       to   { opacity: 1; }
-    }
-    .hero__hint {
-      position: absolute;
-      inset: auto 0 -0.5rem 0;
-      text-align: center;
-      font-family: var(--font-mono);
-      font-size: 0.68rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--text-dim);
-      opacity: 0.55;
     }
     @media (min-width: 960px) {
       .hero__inner {

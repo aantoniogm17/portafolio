@@ -18,7 +18,13 @@ import { RevealDirective } from '../core/reveal.directive';
           @for (project of t().projects.items; track project.name; let i = $index) {
             <article class="card project" appReveal [appRevealDelay]="i * 110">
               <header class="project__head">
-                <h3 class="project__name gradient-text">{{ project.name }}</h3>
+                <h3 class="project__name">
+                  @if (project.url) {
+                    <a class="gradient-text" [href]="project.url" target="_blank" rel="noopener noreferrer">{{ project.name }}</a>
+                  } @else {
+                    <span class="gradient-text">{{ project.name }}</span>
+                  }
+                </h3>
                 <p class="project__tagline">{{ project.tagline }}</p>
               </header>
 

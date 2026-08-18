@@ -16,10 +16,6 @@ import { RevealDirective } from '../core/reveal.directive';
 
         <a class="contact__mail gradient-text" [href]="links.mailto">{{ links.email }}</a>
 
-        <div class="contact__meta">
-          <span class="contact__where">{{ t().contact.locationLabel }} — {{ t().contact.location }}</span>
-        </div>
-
         <div class="contact__actions">
           <a class="btn btn--primary" [href]="links.cvEs" download>{{ t().contact.cvEs }}</a>
           <a class="btn btn--ghost" [href]="links.cvEn" download>{{ t().contact.cvEn }}</a>
@@ -28,13 +24,6 @@ import { RevealDirective } from '../core/reveal.directive';
         </div>
       </div>
     </section>
-
-    <footer class="footer">
-      <div class="container footer__inner">
-        <span>© {{ t().footer.year }} Antonio García Morán</span>
-        <span>{{ t().footer.built }}</span>
-      </div>
-    </footer>
   `,
   styles: `
     .contact__title { margin-bottom: 1rem; }
@@ -46,27 +35,9 @@ import { RevealDirective } from '../core/reveal.directive';
       font-weight: 600;
       letter-spacing: -0.02em;
       word-break: break-word;
-    }
-    .contact__meta {
-      font-family: var(--font-mono);
-      font-size: 0.76rem;
-      color: var(--text-dim);
-      margin-block: 1rem 2.2rem;
+      margin-bottom: 2.2rem;
     }
     .contact__actions { display: flex; flex-wrap: wrap; gap: 0.7rem; }
-    .footer {
-      border-top: 1px solid var(--line);
-      padding-block: 2rem;
-    }
-    .footer__inner {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.6rem 1.5rem;
-      justify-content: space-between;
-      font-family: var(--font-mono);
-      font-size: 0.74rem;
-      color: var(--text-dim);
-    }
   `,
 })
 export class Contact {
