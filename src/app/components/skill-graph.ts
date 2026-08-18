@@ -4,13 +4,16 @@ import {
   ElementRef,
   OnDestroy,
   afterNextRender,
+  effect,
+  inject,
   input,
   viewChild,
 } from '@angular/core';
+import { I18nService } from '../core/i18n.service';
 
 interface Node {
   label: string;
-  group: 0 | 1 | 2 | 3;
+  kind: 'center' | 'hub' | 'leaf';
   x: number;
   y: number;
   vx: number;
@@ -24,7 +27,7 @@ interface IconSpec {
   url: string;
   /** Color de marca del icono, usado en el anillo del nodo y en las aristas que lo tocan. */
   color: string;
-  /** Los logos de fondo negro (p. ej. GitHub) son invisibles sobre el relleno oscuro del nodo. */
+  /** Los logos de fondo negro (p. ej. GitHub, o los iconos de línea de lucide) son invisibles sobre el relleno oscuro del nodo. */
   invert?: boolean;
   /**
    * 'contain' (por defecto) respeta el logo transparente tal cual.
@@ -34,12 +37,32 @@ interface IconSpec {
   fit?: 'contain' | 'cover';
 }
 
-/** Color del nodo central (mis iniciales). Cada tecnología usa el color de marca de su icono. */
+/** Color del nodo central (mi icono de usuario). */
 const CENTER_COLOR = '#E9ECF4';
 
 function devicon(slug: string, variant = 'original'): string {
   return `https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/${slug}/${slug}-${variant}.svg`;
 }
+
+function lucide(name: string): string {
+  return `https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/${name}.svg`;
+}
+
+const CENTER_ICON: IconSpec = { url: lucide('user'), color: CENTER_COLOR, invert: true };
+
+/** Un icono de categoría por grupo de tecnologías (mismo orden que `tech.groups` en content.ts). */
+const CATEGORY_ICONS: readonly IconSpec[] = [
+  { url: lucide('code'), color: '#3DD6C4', invert: true },
+  { url: lucide('cloud'), color: '#8B6DF0', invert: true },
+  { url: lucide('wrench'), color: '#F2A44C', invert: true },
+];
+
+/** Tecnologías por categoría (mismo orden/agrupación que CATEGORY_ICONS). */
+const CATEGORY_ITEMS: readonly string[][] = [
+  ['Angular', 'C#', 'JavaScript', 'Ionic', 'Java', 'Python', 'ASP.NET', 'HTML', 'CSS'],
+  ['SQL Server', 'Oracle', 'AWS', 'Firebase'],
+  ['Git', 'GitHub', 'VS Code', 'Visual Studio', 'Android Studio'],
+];
 
 /** Iconos tomados de devicon.dev, con su color de marca oficial. */
 const ICONS: Record<string, IconSpec> = {
@@ -74,6 +97,11 @@ const ICONS: Record<string, IconSpec> = {
  * grafos, así que el elemento que abre el sitio es un grafo de verdad — nodos,
  * aristas y una simulación de fuerzas (repulsión entre nodos, resortes en las
  * aristas, atracción al centro), no una animación de partículas.
+ *
+ * Estructura: el nodo central (mi icono de usuario) conecta con 3 nodos de
+ * categoría (Desarrollo, Datos y nube, Herramientas — con su propio icono),
+ * y de cada categoría cuelgan sus tecnologías. Las etiquetas de categoría
+ * se leen de `content.ts` para no romper la paridad ES/EN.
  *
  * Tres cosas que importan más que el efecto visual:
  *  - El canvas se escala por devicePixelRatio, así que no se ve borroso en
@@ -112,9 +140,12 @@ const ICONS: Record<string, IconSpec> = {
 export class SkillGraph implements OnDestroy {
   readonly description = input<string>('');
   private readonly canvasRef = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
+  private readonly i18n = inject(I18nService);
 
   private nodes: Node[] = [];
   private edges: [number, number][] = [];
+  /** Índice de cada nodo de categoría en `nodes`, en el mismo orden que CATEGORY_ITEMS. */
+  private hubIndices: number[] = [];
   private frame = 0;
   private hover = -1;
   private running = false;
@@ -127,6 +158,18 @@ export class SkillGraph implements OnDestroy {
 
   constructor() {
     afterNextRender(() => this.setup());
+
+    // Si el visitante cambia de idioma, los títulos de categoría se actualizan
+    // sin reconstruir el grafo (para no reiniciar la simulación de golpe).
+    effect(() => {
+      const groups = this.i18n.t().tech.groups;
+      if (this.hubIndices.length === 0) return;
+      this.hubIndices.forEach((nodeIndex, i) => {
+        const label = groups[i]?.label;
+        if (label !== undefined) this.nodes[nodeIndex].label = label;
+      });
+      if (!this.running) this.draw();
+    });
   }
 
   ngOnDestroy(): void {
@@ -168,44 +211,60 @@ export class SkillGraph implements OnDestroy {
   }
 
   private buildGraph(): void {
-    const groups: { items: string[]; group: 0 | 1 | 2 }[] = [
-      { group: 0, items: ['Angular', 'C#', 'JavaScript', 'Ionic', 'Java', 'Python', 'ASP.NET', 'HTML', 'CSS'] },
-      { group: 1, items: ['SQL Server', 'Oracle', 'AWS', 'Firebase'] },
-      { group: 2, items: ['Git', 'GitHub', 'VS Code', 'Visual Studio', 'Android Studio'] },
-    ];
+    const groupLabels = this.i18n.t().tech.groups;
 
     this.nodes = [
-      { label: 'AGM', group: 3, x: 0, y: 0, vx: 0, vy: 0, r: 26, color: CENTER_COLOR },
+      { label: '', kind: 'center', x: 0, y: 0, vx: 0, vy: 0, r: 26, color: CENTER_COLOR, icon: CENTER_ICON },
     ];
     this.edges = [];
+    this.hubIndices = [];
+    this.preload(CENTER_ICON.url);
 
-    for (const { items, group } of groups) {
-      const anchorIndex = this.nodes.length;
+    CATEGORY_ITEMS.forEach((items, categoryIndex) => {
+      const categoryIcon = CATEGORY_ICONS[categoryIndex];
+      const hubIndex = this.nodes.length;
+      this.hubIndices.push(hubIndex);
+
+      const angle = Math.random() * Math.PI * 2;
+      this.nodes.push({
+        label: groupLabels[categoryIndex]?.label ?? '',
+        kind: 'hub',
+        x: Math.cos(angle) * 100,
+        y: Math.sin(angle) * 100,
+        vx: 0,
+        vy: 0,
+        r: 20,
+        color: categoryIcon.color,
+        icon: categoryIcon,
+      });
+      this.preload(categoryIcon.url);
+      this.edges.push([0, hubIndex]);
+
+      const leafBase = this.nodes.length;
       items.forEach((label, i) => {
-        const angle = Math.random() * Math.PI * 2;
+        const itemAngle = Math.random() * Math.PI * 2;
         const radius = 80 + Math.random() * 120;
         const icon = ICONS[label];
         this.nodes.push({
           label,
-          group,
-          x: Math.cos(angle) * radius,
-          y: Math.sin(angle) * radius,
+          kind: 'leaf',
+          x: Math.cos(itemAngle) * radius,
+          y: Math.sin(itemAngle) * radius,
           vx: 0,
           vy: 0,
-          r: i === 0 ? 18 : 13,
+          r: 13,
           color: icon?.color ?? CENTER_COLOR,
           icon,
         });
         if (icon) this.preload(icon.url);
-        // El primer elemento de cada grupo cuelga del centro; el resto, de él.
-        this.edges.push(i === 0 ? [0, anchorIndex] : [anchorIndex, anchorIndex + i]);
+        this.edges.push([hubIndex, leafBase + i]);
       });
-      // Un par de aristas cruzadas para que el grafo no parezca un árbol rígido.
+      // Un par de aristas cruzadas para que cada categoría no parezca un árbol rígido.
       if (items.length > 3) {
-        this.edges.push([anchorIndex + 1, anchorIndex + 2]);
-        this.edges.push([anchorIndex + 2, anchorIndex + 3]);
+        this.edges.push([leafBase + 1, leafBase + 2]);
+        this.edges.push([leafBase + 2, leafBase + 3]);
       }
-    }
+    });
   }
 
   private preload(url: string): void {
@@ -347,6 +406,7 @@ export class SkillGraph implements OnDestroy {
       const node = this.nodes[i];
       const active = this.hover === -1 || neighbours.has(i);
       const color = node.color;
+      const title = node.kind !== 'leaf';
 
       ctx.globalAlpha = active ? 1 : 0.18;
 
@@ -369,9 +429,11 @@ export class SkillGraph implements OnDestroy {
 
       this.drawIcon(ctx, node);
 
-      ctx.fillStyle = node.group === 3 ? color : 'rgba(233, 236, 244, 0.92)';
-      ctx.font = `${node.group === 3 ? 600 : 400} ${node.group === 3 ? 13 : 10}px "JetBrains Mono", ui-monospace, monospace`;
-      ctx.fillText(node.label, node.x, node.y + node.r + 12);
+      if (node.label) {
+        ctx.fillStyle = title ? color : 'rgba(233, 236, 244, 0.92)';
+        ctx.font = `${title ? 600 : 400} ${title ? 13 : 10}px "JetBrains Mono", ui-monospace, monospace`;
+        ctx.fillText(node.label, node.x, node.y + node.r + 12);
+      }
     }
 
     ctx.restore();
